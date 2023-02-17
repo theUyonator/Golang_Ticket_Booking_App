@@ -4,7 +4,7 @@ package main
 // We import the strings package ro have different functinalities for strings 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 )
 // For a ticket booking application, we need some key variables and constants including:
 /* 
@@ -15,7 +15,7 @@ import (
 const conferenceTickets uint = 50
 var conferenceName = "Go Conference"
 var remainingTickets uint = 50
-var bookings []string
+var bookings = make([]map[string]string, 0)
 
 
 // In Go, every functionality of an application must be enclosed in a major function called main 
@@ -82,10 +82,7 @@ func getFirstNames() []string{
 	*/
 
 	for _, booking := range bookings {
-	//The package strings is used to perform certain actions on a string. strings.Fields 
-	//takes a string and splits the string where there is a space
-	    var names =	strings.Fields(booking)
-			firstNames = append(firstNames, names[0])
+		firstNames = append(firstNames, booking["firstName"])
 	}
 
 	/*
@@ -95,15 +92,6 @@ func getFirstNames() []string{
 	*/
 	return firstNames
 
-}
-
-//This function validates the inputs entered by the user 
-func validateUserInput (firstName string, lastName string, email string, userTickets uint) (bool, bool, bool){
-	var isValidName = len(firstName) >= 2 && len(lastName) >= 2
-	var isValidEmail = strings.Contains(email, "@")
-	var isValidTicketNumber = userTickets > 0 && userTickets <= remainingTickets
-
-	return isValidName, isValidEmail, isValidTicketNumber
 }
 
 //This function prompts the user to enter inputs
@@ -130,9 +118,21 @@ func getUserInput() (string, string, string, uint){
 }
 
 //This function handles the ticket booking 
-func bookTicket(firstName string, lastName string, email string, userTickets uint) ([]string, uint){
+func bookTicket(firstName string, lastName string, email string, userTickets uint) ([]map[string]string, uint){
 	remainingTickets = remainingTickets - userTickets
-	bookings = append(bookings, firstName + " " + lastName)
+	
+	//create map to store user booking information 
+
+	var userData = make(map[string]string)
+	userData["firstName"] = firstName
+	userData["lastName"] = lastName
+	userData["email"] = email
+	//We convert the userTickets into a string bbecause  maps only accept one data type
+	userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
+
+
+	bookings = append(bookings, userData)
+	fmt.Printf("List of bookings is %v\n", bookings)
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", firstName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
