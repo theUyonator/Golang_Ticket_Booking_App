@@ -4,7 +4,8 @@ package main
 // We import the strings package ro have different functinalities for strings 
 import (
 	"fmt"
-	"strconv"
+	"time"
+	"sync"
 )
 // For a ticket booking application, we need some key variables and constants including:
 /* 
@@ -15,8 +16,17 @@ import (
 const conferenceTickets uint = 50
 var conferenceName = "Go Conference"
 var remainingTickets uint = 50
-var bookings = make([]map[string]string, 0)
+// var bookings = make([]map[string]string, 0)
+var bookings = make([]UserData, 0)
 
+type UserData struct {
+	firstName string
+	lastName string 
+	email string 
+	numberOfTickets uint
+}
+
+var wg = sync.WaitGroup{}
 
 // In Go, every functionality of an application must be enclosed in a major function called main 
 func main() {
@@ -36,6 +46,10 @@ func main() {
 		//this will fix the edge case of a user ordering > 50 tickets 
 		if isValidName && isValidEmail && isValidTicketNumber {
 			bookings, remainingTickets = bookTicket(firstName, lastName, email, userTickets)
+			//To make this app concurrent and allow other ticket bookings while the previously
+			//booked ticket gets sent out, the Go keyword is used in front of the fucntion call
+			wg.Add(1)
+			go sendTicket(userTickets, firstName, lastName, email)
 
 			//We would like to protect the privacy of the users and only share their first names so this
 			//takes the user names inputs and prints out just the first names 
@@ -62,6 +76,7 @@ func main() {
 			}
 		}
 		
+		wg.Wait()
 	}
 }
 
@@ -82,7 +97,7 @@ func getFirstNames() []string{
 	*/
 
 	for _, booking := range bookings {
-		firstNames = append(firstNames, booking["firstName"])
+		firstNames = append(firstNames, booking.firstName)
 	}
 
 	/*
@@ -118,18 +133,24 @@ func getUserInput() (string, string, string, uint){
 }
 
 //This function handles the ticket booking 
-func bookTicket(firstName string, lastName string, email string, userTickets uint) ([]map[string]string, uint){
+func bookTicket(firstName string, lastName string, email string, userTickets uint) ([]UserData, uint){
 	remainingTickets = remainingTickets - userTickets
 	
 	//create map to store user booking information 
+	// var userData = make(map[string]string)
+	// userData["firstName"] = firstName
+	// userData["lastName"] = lastName
+	// userData["email"] = email
+	// //We convert the userTickets into a string bbecause  maps only accept one data type
+	// userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
 
-	var userData = make(map[string]string)
-	userData["firstName"] = firstName
-	userData["lastName"] = lastName
-	userData["email"] = email
-	//We convert the userTickets into a string bbecause  maps only accept one data type
-	userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
-
+	//Instead of a map, we will use a struct since it can hold different data types 
+	var userData = UserData {
+		firstName: firstName,
+		lastName: lastName,
+		email: email,
+		numberOfTickets: userTickets,
+	}
 
 	bookings = append(bookings, userData)
 	fmt.Printf("List of bookings is %v\n", bookings)
@@ -138,4 +159,15 @@ func bookTicket(firstName string, lastName string, email string, userTickets uin
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
 
 	return bookings, remainingTickets
+}
+
+//This function simulates the ticket being sent to the user 
+func sendTicket(userTickets uint, firstName string, lastName string, email string) {
+	//to simulate a delay in sending the ticket out we utilized the time package 
+	time.Sleep(10 * time.Second)
+	var ticket = fmt.Sprintf("%v tickets for %v %v", userTickets, firstName, lastName)
+	fmt.Println("########################################")
+	fmt.Printf("Sending ticket:\n %v \nto email address %v\n", ticket, email)
+	fmt.Println("########################################")
+	wg.Done()
 }
