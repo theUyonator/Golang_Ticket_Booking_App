@@ -14,7 +14,7 @@ import (
 	level to allow all functions access to them
 */
 const conferenceTickets uint = 50
-var conferenceName = "Go Conference"
+var conferenceName string = "Go Conference"
 var remainingTickets uint = 50
 // var bookings = make([]map[string]string, 0)
 var bookings = make([]UserData, 0)
@@ -153,7 +153,7 @@ func bookTicket(firstName string, lastName string, email string, userTickets uin
 	}
 
 	bookings = append(bookings, userData)
-	fmt.Printf("List of bookings is %v\n", bookings)
+	// fmt.Printf("List of bookings is %v\n", bookings)
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", firstName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
